@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 const {getLinks} = require('../services/getLinks');
+const {Queue} = require('../services/queue');
 
 router.get('/*', async (req, res) => {
     const url = req.params[0];
@@ -8,32 +9,38 @@ router.get('/*', async (req, res) => {
     // get all links on page
     try {
         const linkObject = await getLinks(url);
-        let internalLinks = linkObject.internal;
+        let internalLinks = Array.from(linkObject.internal);
+        let store = [];
+        let broken = [];
+        let q = new Queue();
+        internalLinks.forEach(el => q.enqueue(el));
         let visited = new Set();
-        //console.log(internalLinks);
-        // internalLinks.forEach(async (link) => {
-        for (link of internalLinks) {
-            console.log('size of internal links: ', internalLinks.size);
-            if(!visited.has(link)) {
+
+        while (q.size) {
+            let link = q.dequeue();
+            if (!visited.has(link)){
+                visited.add(link);
+                if (link[0] === '/') {
+                    link = url.substring(0, url.length - 1) + link;
+                }
                 try {
-                    let modLink = link;
-                    console.log('visiting: ', modLink);
-                    if (link[0] === '/') {
-                        modLink = url.substring(0,url.length) + link;
+                    //TODO: exclude PDFs
+                    console.log(link);
+                    let newLinkObject = await getLinks(link);
+                    for (el of newLinkObject.internal) {
+                        q.enqueue(el);
                     }
-                    console.log('modLink: ', modLink);
-                    let newLinkObject = await getLinks(modLink);
-                    let newLinks = newLinkObject.internal;
-                    //console.log(newLinkObject);
-                    newLinks.forEach(el => internalLinks.add(el));
-                    console.log(internalLinks.size);
-                    visited.add(link);
+                    store.push(link);
                 } catch (err) {
+                    broken.push(link);
                     console.log(err)
                 }
             }
         }
-        console.log('done');
+        res.json({
+            functional: store,
+            broken
+        });
     } catch (err) {
         console.log(err);
     }

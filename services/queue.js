@@ -1,7 +1,7 @@
 class Node {
     constructor(value) {
         this.value = value;
-        this.next = next;
+        this.next = null;
     }
 }
 
@@ -30,6 +30,8 @@ class Queue {
         } 
         this.first = this.first.next;
         this.size--;
-        return temp.value;
+        return poppedNode.value;
     }
 }
+
+module.exports.Queue = Queue;

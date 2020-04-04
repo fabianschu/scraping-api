@@ -13,7 +13,7 @@ const getLinks = async (url) => {
     $(links).each((i, link) => {
         const href = $(link).attr('href');
         if (href) {
-            if (href.includes('spiegel.de') || href[0] === "/") {
+            if (href.includes('dampsoft.de') || href[0] === "/") {
                 linkObject.internal.add(href);
             } else {
                 linkObject.external.add(href);
