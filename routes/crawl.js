@@ -1,6 +1,9 @@
 var express = require('express');
 var router = express.Router();
 const {getLinks} = require('../services/getLinks');
+const {isException} = require('../services/isException');
+const {cleanLink} = require('../services/cleanLink');
+const {isSubdomain} = require('../services/isSubdomain');
 const {Queue} = require('../services/queue');
 
 router.get('/*', async (req, res) => {
@@ -10,27 +13,31 @@ router.get('/*', async (req, res) => {
     try {
         const linkObject = await getLinks(url);
         let internalLinks = Array.from(linkObject.internal);
+        let q = new Queue();
+        let visited = new Set();
         let store = [];
         let broken = [];
-        let q = new Queue();
+
         internalLinks.forEach(el => q.enqueue(el));
-        let visited = new Set();
 
         while (q.size) {
             let link = q.dequeue();
+            console.log('original link: ', link)
             if (!visited.has(link)){
+                console.log('link not yet visited')
                 visited.add(link);
-                if (link[0] === '/') {
-                    link = url.substring(0, url.length - 1) + link;
-                }
+                link = cleanLink(url, link);
                 try {
                     //TODO: exclude PDFs
-                    console.log(link);
-                    let newLinkObject = await getLinks(link);
-                    for (el of newLinkObject.internal) {
-                        q.enqueue(el);
+                    console.log('2: ', link);
+                    if(!isException(link)) {
+                        console.log("get new shit")
+                        let newLinkObject = await getLinks(link);
+                        for (el of newLinkObject.internal) {
+                            q.enqueue(el);
+                        }
+                        store.push(link);
                     }
-                    store.push(link);
                 } catch (err) {
                     broken.push(link);
                     console.log(err)
