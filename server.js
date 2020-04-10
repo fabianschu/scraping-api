@@ -41,7 +41,8 @@ app.post('/', (req, res) => {
     const title = req.body.title;
     const year = req.body.year;
     session
-        .run(`CREATE (n:Movie {title:"${title}"}) RETURN n.title`)
+        // .run(`CREATE (n:Movie {title:"${title}"}) RETURN n.title`)
+        .run('CREATE (n:Movie {title:$titleParam, year:$yearParam}) RETURN n.title', {titleParam: title, yearParam: year})
         // .run("CREATE (TheDaVinciCode:Movie {title:'The Da Vinci asdfasgasg', released:2006, tagline:'Break The Codes'})")
         .then(result => session.close())
         .catch(err => console.log(err))
