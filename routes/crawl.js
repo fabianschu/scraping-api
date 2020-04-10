@@ -6,6 +6,8 @@ const {cleanLink} = require('../services/cleanLink');
 const {isSubdomain} = require('../services/isSubdomain');
 const {Queue} = require('../services/queue');
 
+const neo4j = require('neo4j-driver');
+
 router.get('/*', async (req, res) => {
     const url = req.params[0];
 
@@ -52,5 +54,9 @@ router.get('/*', async (req, res) => {
         console.log(err);
     }
 });
+
+router.post('/*', (req, res) => {
+    res.send('hi knucklehead')
+})
 
 module.exports = router;

@@ -10,9 +10,14 @@ const path = require('path');
 const neo4j = require('neo4j-driver');
 
 app.use(logger("dev"));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+// app.use(cookieParser());
 
 const driver = neo4j.driver('bolt://localhost', neo4j.auth.basic('neo4j', '123456'));
 const session = driver.session();
+
+
 
 app.get('/', (req, res) => {
     session
@@ -25,11 +30,22 @@ app.get('/', (req, res) => {
                     title: record._fields[0].properties.title
                 }
             })
-            return res.json(movieArray);
+            console.log('DRIVER RESULTS: ', movieArray);
+            //return res.json(movieArray);
         })
         .catch(err => console.log(err))
     //return res.send('Hello world');
 });
+
+app.post('/', (req, res) => {
+    const title = req.body.title;
+    const year = req.body.year;
+    session
+        .run(`CREATE (n:Movie {title:"${title}"}) RETURN n.title`)
+        // .run("CREATE (TheDaVinciCode:Movie {title:'The Da Vinci asdfasgasg', released:2006, tagline:'Break The Codes'})")
+        .then(result => session.close())
+        .catch(err => console.log(err))
+})
 
 app.listen(process.env.PORT || 5000, () => console.log('listening on port '));
 
